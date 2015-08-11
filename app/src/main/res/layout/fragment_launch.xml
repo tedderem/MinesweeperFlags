@@ -1,0 +1,59 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.tacoma.uw.erik.minesweeperflags.LaunchFragment"
+    android:id="@+id/launch_fragment">
+
+    <TextView
+        android:id="@+id/launch_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/app_name"
+        android:textSize="54sp"
+        android:gravity="center|center_horizontal"
+        android:textStyle="bold|italic" />
+
+    <EditText
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:inputType="text"
+        android:ems="10"
+        android:id="@+id/username_input"
+        android:layout_centerVertical="true"
+        android:layout_centerHorizontal="true"
+        android:hint="@string/username_hint" />
+
+    <EditText
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/password_input"
+        android:layout_below="@+id/username_input"
+        android:layout_alignLeft="@+id/username_input"
+        android:layout_alignStart="@+id/username_input"
+        android:layout_alignRight="@+id/username_input"
+        android:layout_alignEnd="@+id/username_input"
+        android:inputType="textPassword"
+        android:hint="@string/password_hint"
+        android:password="true" />
+
+    <Button
+        android:id="@+id/login_button"
+        android:text="@string/login_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/password_input"
+        android:layout_centerHorizontal="true" />
+
+    <Button
+        android:id="@+id/register_button"
+        android:text="@string/register_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true" />
+
+
+
+
+</RelativeLayout>
