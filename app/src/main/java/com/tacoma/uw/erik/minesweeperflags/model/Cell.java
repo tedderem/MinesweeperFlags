@@ -7,7 +7,6 @@ import java.io.Serializable;
  * Class which represents a single cell on the Minesweeper Flags board.
  *
  * @author Erik Tedder
- * @date 7/27/2015
  */
 public class Cell implements Serializable {
 
@@ -48,8 +47,7 @@ public class Cell implements Serializable {
      * @return A Point object denoting this cell's location.
      */
     public int[] getLocation() {
-        int location[] = {myX, myY};
-        return location;
+        return new int[]{myX, myY};
     }
 
     /**
@@ -96,7 +94,7 @@ public class Cell implements Serializable {
     /**
      * Method which returns whether this cell is considered a mine.
      *
-     * @return
+     * @return The boolean value if this cell is a mine.
      */
     public boolean isMine() {
         return myIsMine;
@@ -105,7 +103,7 @@ public class Cell implements Serializable {
     /**
      * Method which returns whether this cell is blank.
      *
-     * @return
+     * @return The boolean value if this cell is blank.
      */
     public boolean isBlank() {
         return !myIsMine && myCount == 0;

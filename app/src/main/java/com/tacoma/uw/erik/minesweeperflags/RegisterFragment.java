@@ -3,6 +3,7 @@ package com.tacoma.uw.erik.minesweeperflags;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.support.annotation.NonNull;
 import android.support.v4.app.DialogFragment;
 import android.content.DialogInterface;
 import android.os.AsyncTask;
@@ -22,7 +23,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
-import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
@@ -44,6 +44,7 @@ public class RegisterFragment extends DialogFragment {
         // Required empty public constructor
     }
 
+    @NonNull
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
@@ -122,8 +123,7 @@ public class RegisterFragment extends DialogFragment {
             }
 
             //a field is empty
-            if (username == null || pwd == null || pwdCheck == null
-                    || username.length() == 0 || pwd.length() == 0 || pwdCheck.length() == 0) {
+            if (username.length() == 0 || pwd.length() == 0 || pwdCheck.length() == 0) {
                 errorText.setText("Error: Cannot leave a field blank!");
             }
 
@@ -189,8 +189,8 @@ public class RegisterFragment extends DialogFragment {
         }
 
         // Reads an InputStream and converts it to a String.
-        public String readIt(InputStream stream, int len) throws IOException, UnsupportedEncodingException {
-            Reader reader = null;
+        public String readIt(InputStream stream, int len) throws IOException {
+            Reader reader;
             reader = new InputStreamReader(stream, "UTF-8");
             char[] buffer = new char[len];
             reader.read(buffer);

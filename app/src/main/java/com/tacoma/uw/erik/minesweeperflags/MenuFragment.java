@@ -28,7 +28,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
-import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
@@ -119,13 +118,15 @@ public class MenuFragment extends ListFragment {
     public void onStart() {
         super.onStart();
 
-        mListView = (ListView) getView().findViewById(android.R.id.list);
-        mList = new ArrayList<Integer>();
+        if (getView() != null) {
+            mListView = (ListView) getView().findViewById(android.R.id.list);
+            mList = new ArrayList<>();
 
-        mArrayAdapter = new ArrayAdapter<Integer>(getActivity(), android.R.layout.simple_list_item_1,
-                android.R.id.text1, mList);
+            mArrayAdapter = new ArrayAdapter<>(getActivity(), android.R.layout.simple_list_item_1,
+                    android.R.id.text1, mList);
 
-        checkGames();
+            checkGames();
+        }
     }
 
     private void checkGames() {
@@ -151,7 +152,7 @@ public class MenuFragment extends ListFragment {
 
 
     public interface GameSelectedListener {
-        public void onGameLoaded(Integer board);
+        void onGameLoaded(Integer board);
     }
 
     private class GetUserWebTask extends AsyncTask<String, Void, String> {
@@ -206,8 +207,8 @@ public class MenuFragment extends ListFragment {
         }
 
         // Reads an InputStream and converts it to a String.
-        public String readIt(InputStream stream, int len) throws IOException, UnsupportedEncodingException {
-            Reader reader = null;
+        public String readIt(InputStream stream, int len) throws IOException {
+            Reader reader;
             reader = new InputStreamReader(stream, "UTF-8");
             char[] buffer = new char[len];
             reader.read(buffer);
@@ -338,8 +339,8 @@ public class MenuFragment extends ListFragment {
         }
 
         // Reads an InputStream and converts it to a String.
-        public String readIt(InputStream stream, int len) throws IOException, UnsupportedEncodingException {
-            Reader reader = null;
+        public String readIt(InputStream stream, int len) throws IOException {
+            Reader reader;
             reader = new InputStreamReader(stream, "UTF-8");
             char[] buffer = new char[len];
             reader.read(buffer);
@@ -421,8 +422,8 @@ public class MenuFragment extends ListFragment {
         }
 
         // Reads an InputStream and converts it to a String.
-        public String readIt(InputStream stream, int len) throws IOException, UnsupportedEncodingException {
-            Reader reader = null;
+        public String readIt(InputStream stream, int len) throws IOException {
+            Reader reader;
             reader = new InputStreamReader(stream, "UTF-8");
             char[] buffer = new char[len];
             reader.read(buffer);

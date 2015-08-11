@@ -34,7 +34,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.Reader;
-import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Observable;
@@ -44,7 +43,6 @@ import java.util.Observer;
  * A fragment that will be used to depict a minesweeper game being played.
  *
  * @author Erik Tedder
- * @date 8/11/2015
  */
 public class GameFragment extends Fragment implements Observer {
 
@@ -101,22 +99,19 @@ public class GameFragment extends Fragment implements Observer {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
-        View view = inflater.inflate(R.layout.fragment_game, container, false);
-
-        return view;
+        return inflater.inflate(R.layout.fragment_game, container, false);
     }
 
     /**
      * A handler object that will be used to manage the timer that is refreshing the game board.
      */
-    Handler timerHandler = new Handler();
+    private final Handler timerHandler = new Handler();
 
     /**
      * A runnable thread that is used to consistently poll the web service for updates to the game
      * board.
      */
-    Runnable timerRunnable = new Runnable() {
+    private final Runnable timerRunnable = new Runnable() {
 
         /**
          * {@inheritDoc}
@@ -460,14 +455,16 @@ public class GameFragment extends Fragment implements Observer {
      * Helper method which updates the views for the player scores.
      */
     private void updatePlayerScore() {
-        TextView playerOneMines = (TextView) getView().findViewById(R.id.player_one_mine_label);
-        TextView playerTwoMines = (TextView) getView().findViewById(R.id.player_two_mine_label);
+        if (getView() != null) {
+            TextView playerOneMines = (TextView) getView().findViewById(R.id.player_one_mine_label);
+            TextView playerTwoMines = (TextView) getView().findViewById(R.id.player_two_mine_label);
 
-        playerOneMines.setText(String.valueOf(myBoard.getMinesForPlayer(0)));
-        playerTwoMines.setText(String.valueOf(myBoard.getMinesForPlayer(1)));
+            playerOneMines.setText(String.valueOf(myBoard.getMinesForPlayer(0)));
+            playerTwoMines.setText(String.valueOf(myBoard.getMinesForPlayer(1)));
 
-        if (myBoard.isGameOver()) {
-            gameOverDisplay();
+            if (myBoard.isGameOver()) {
+                gameOverDisplay();
+            }
         }
     }
 
@@ -542,8 +539,8 @@ public class GameFragment extends Fragment implements Observer {
         }
 
         // Reads an InputStream and converts it to a String.
-        public String readIt(InputStream stream, int len) throws IOException, UnsupportedEncodingException {
-            Reader reader = null;
+        public String readIt(InputStream stream, int len) throws IOException {
+            Reader reader;
             reader = new InputStreamReader(stream, "UTF-8");
             char[] buffer = new char[len];
             reader.read(buffer);
@@ -611,7 +608,7 @@ public class GameFragment extends Fragment implements Observer {
 
                 //concatenate string based on buffered reader's lines
                 String contentAsString = "";
-                String s = "";
+                String s;
                 while ((s = buffer.readLine()) != null) {
                     contentAsString += s;
                 }

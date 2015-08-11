@@ -15,7 +15,6 @@ import android.view.MenuItem;
  * as well as manage showing of games and displaying of chat rooms.
  *
  * @author Erik Tedder
- * @date 8/11/2015
  */
 public class MainActivity extends FragmentActivity
         implements  MenuFragment.GameSelectedListener, GameFragment.ChatOpenedListener {
@@ -38,7 +37,7 @@ public class MainActivity extends FragmentActivity
             myPreferences = getSharedPreferences(getString(R.string.SHARED_PREFS), Context.MODE_PRIVATE);
             boolean loggedIn = myPreferences.getBoolean(getString(R.string.LOGGEDIN), false);
 
-            Fragment fragment = null;
+            Fragment fragment;
 
             //check if user is currently logged in
             if (!loggedIn) { //not logged in, goto launch fragment

@@ -12,22 +12,21 @@ import com.tacoma.uw.erik.minesweeperflags.model.GameInfo;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
 /**
- * Created by Erik on 7/30/2015.
+ * Class for the temporary storage of game information as retrieved from the SQLite database.
  */
 public class GameInfoDB {
 
-    public static final int DB_VERSION = 1;
-    public static final String DB_NAME = "GameInfo.db";
-    public static final String GAME_TABLE = "Game";
+    private static final int DB_VERSION = 1;
+    private static final String DB_NAME = "GameInfo.db";
+    private static final String GAME_TABLE = "Game";
 
-    private SQLiteDatabase mySQLiteDatabase;
-    private GameInfoDBHelper myGameInfoDBHelper;
+    private final SQLiteDatabase mySQLiteDatabase;
+    private final GameInfoDBHelper myGameInfoDBHelper;
 
     public GameInfoDB(Context context) {
         myGameInfoDBHelper = new GameInfoDBHelper(
@@ -42,7 +41,7 @@ public class GameInfoDB {
      * @param username The user for this game.
      * @param board The board for this user.
      * @param minesFound The number of mines found in the board.
-     * @return
+     * @return Boolean as far as if this game was successfully inserted.
      */
     public boolean insertGame(String username, Board board, String minesFound) {
         byte[] data = compressBoard(board);

@@ -34,7 +34,6 @@ import java.net.URLEncoder;
  * A fragment which is responsible for handling all chat features within the project.
  *
  * @author Erik Tedder
- * @date 8/11/2015
  */
 public class ChatFragment extends Fragment {
 
@@ -64,10 +63,10 @@ public class ChatFragment extends Fragment {
     }
 
     /** Handler responsible for managing the update timer thread. */
-    Handler timerHandler = new Handler();
+    private final Handler timerHandler = new Handler();
 
     /** Update timer thread which will constantly retrieves the chat logs from the web server. */
-    Runnable timerRunnable = new Runnable() {
+    private final Runnable timerRunnable = new Runnable() {
 
         @Override
         public void run() {
@@ -151,7 +150,7 @@ public class ChatFragment extends Fragment {
                     myChatLog += textToEnter + "<br/>";
                     setChatLog();
 
-                    String url = null;
+                    String url;
 
                     //construct the URL necessary to save the chat
                     try {
@@ -225,8 +224,8 @@ public class ChatFragment extends Fragment {
         }
 
         // Reads an InputStream and converts it to a String.
-        public String readIt(InputStream stream, int len) throws IOException, UnsupportedEncodingException {
-            Reader reader = null;
+        public String readIt(InputStream stream, int len) throws IOException {
+            Reader reader;
             reader = new InputStreamReader(stream, "UTF-8");
             char[] buffer = new char[len];
             reader.read(buffer);
@@ -273,9 +272,6 @@ public class ChatFragment extends Fragment {
         // a string.
         private String downloadUrl(String myurl) throws IOException {
             InputStream is = null;
-            // Only display the first 1000000 characters of the retrieved
-            // web page content.
-            int len = 10000;
 
             try {
                 URL url = new URL(myurl);
@@ -294,7 +290,7 @@ public class ChatFragment extends Fragment {
                 BufferedReader buffer = new BufferedReader(
                         new InputStreamReader(is));
                 String contentAsString = "";
-                String s = "";
+                String s;
                 while ((s = buffer.readLine()) != null) {
                     contentAsString += s;
                 }

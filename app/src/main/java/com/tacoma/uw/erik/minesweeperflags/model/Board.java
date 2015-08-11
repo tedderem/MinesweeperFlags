@@ -35,7 +35,7 @@ public class Board extends Observable implements Serializable {
     private static final int DEFAULT_NUMBER_OF_MINES = 30;
 
     /** Two-dimensional array of Cells to represent the game's board. */
-    private Cell[][] myBoard;
+    private final Cell[][] myBoard;
 
     /** Boolean representing the game being over. */
     private boolean myGameOver;
@@ -53,10 +53,10 @@ public class Board extends Observable implements Serializable {
     private int myMinesFound;
 
     /** String array which holds the players of this game. */
-    private String[] myPlayers;
+    private final String[] myPlayers;
 
     /** Integer array which holds the number of mines found by the players. */
-    private int[] myPlayersMinesFound;
+    private final int[] myPlayersMinesFound;
 
     /** The current player for this game. */
     private int myCurrentPlayer;
@@ -76,8 +76,8 @@ public class Board extends Observable implements Serializable {
      * @param theHeight The desired height of the board.
      * @param theTotalMines The total number of mines on the board.
      */
-    public Board(final int theWidth, final int theHeight, final int theTotalMines,
-                 final String thePlayerOne, final String thePlayerTwo) {
+    private Board(final int theWidth, final int theHeight, final int theTotalMines,
+                  final String thePlayerOne, final String thePlayerTwo) {
         myWidth = theWidth;
         myHeight = theHeight;
         myMineTotal = theTotalMines;
@@ -325,7 +325,7 @@ public class Board extends Observable implements Serializable {
 
         for (Cell c : neighbors) {
             if (!c.isSelected())
-                blankSelectCell((int)c.getLocation()[0], (int)c.getLocation()[1]);
+                blankSelectCell(c.getLocation()[0], c.getLocation()[1]);
         }
     }
 
@@ -354,7 +354,7 @@ public class Board extends Observable implements Serializable {
      * @return A list of cells.
      */
     private List<Cell> getNeighbors(final int theRow, final int theColumn) {
-        ArrayList<Cell> neighbors = new ArrayList<Cell>();
+        ArrayList<Cell> neighbors = new ArrayList<>();
 
         if (theRow == 0) {
             neighbors.add(myBoard[theRow + 1][theColumn]);
