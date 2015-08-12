@@ -18,7 +18,6 @@ import com.tacoma.uw.erik.minesweeperflags.control.BoardEvents;
  * cell itself is a mine.
  *
  * @author Erik Tedder
- * @version 7/27/2015
  */
 public class Board extends Observable implements Serializable {
 

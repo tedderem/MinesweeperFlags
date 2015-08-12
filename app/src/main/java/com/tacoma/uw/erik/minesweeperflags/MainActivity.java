@@ -97,6 +97,7 @@ public class MainActivity extends FragmentActivity
                 SharedPreferences.Editor prefEditor = myPreferences.edit();
                 prefEditor.putBoolean(getString(R.string.LOGGEDIN), false);
                 prefEditor.putString(getString(R.string.USERNAME), "");
+                prefEditor.putLong(getString(R.string.LASTREFRESH), 0);
                 prefEditor.commit();
 
                 LaunchFragment fragment = new LaunchFragment();

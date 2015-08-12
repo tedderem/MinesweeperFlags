@@ -8,7 +8,6 @@ import android.support.v4.app.DialogFragment;
 import android.content.DialogInterface;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.app.Fragment;
 import android.os.Handler;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -26,24 +25,47 @@ import java.io.Reader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
-
 /**
- * A simple {@link Fragment} subclass.
+ * A DialogFrament class responsible for showing an account registration view to the user.
+ *
+ * @author Erik Tedder
  */
 public class RegisterFragment extends DialogFragment {
 
+    /**
+     * Tag for debugging purposes.
+     */
     private static final String TAG = "register";
 
+    /**
+     * The URL being used to add a user into the system.
+     */
     private static final String url = "http://cssgate.insttech.washington.edu/~tedderem/addUser.php";
 
+    /**
+     * The dialog for this class.
+     */
     private AlertDialog myDialog;
 
+    /**
+     * The error text view that is used to give feedback to the user about the registration
+     * process.
+     */
     private TextView errorText;
 
+    /**
+     * Default, no-argument constructor
+     */
     public RegisterFragment() {
         // Required empty public constructor
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * Creates the Dialog for this class and initializes the on click listeners for the different
+     * buttons.
+     */
     @NonNull
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {

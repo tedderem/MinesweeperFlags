@@ -26,22 +26,33 @@ import java.io.Reader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
-
 /**
- * A simple {@link Fragment} subclass.
+ * Fragment class that handles the view when the application is initially launched. This
+ * constitutes the login view as well as the ability to open the Registration Fragment.
+ *
+ * @author Erik Tedder
  */
 public class LaunchFragment extends Fragment {
 
+    /** Tag used for debugging purposes. */
     private static final String TAG = "launch";
 
+    /** The URL for validating a user's login credentials. */
     private static final String url = "http://cssgate.insttech.washington.edu/~tedderem/validate.php";
 
+    /** Class field of the View for this fragment. */
     private View myView;
 
+    /**
+     * Default, no argument constructor.
+     */
     public LaunchFragment() {
         // Required empty public constructor
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -50,6 +61,11 @@ public class LaunchFragment extends Fragment {
         return myView;
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * Sets up the view for this fragment for user interaction.
+     */
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
@@ -91,11 +107,14 @@ public class LaunchFragment extends Fragment {
      * Method for validating a user's login credentials against the web services' information.
      */
     private void validateLogin() {
+        //ensure the view is not null
         if (myView != null) {
+            //retrieve the username field and its corresponding text
             final EditText usernameField = (EditText) myView.findViewById(R.id.username_input);
 
             String username = usernameField.getText().toString();
 
+            //construct the validation url
             String validateUrl = url;
             validateUrl += "?username=" + username;
 
@@ -104,7 +123,7 @@ public class LaunchFragment extends Fragment {
                     getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
             NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
             if (networkInfo != null && networkInfo.isConnected()) {
-                new AddUserWebTask().execute(validateUrl);
+                new LoginUserWebTask().execute(validateUrl);
             } else {
                 Toast.makeText(getActivity()
                         , "No network connection available.", Toast.LENGTH_LONG)
@@ -116,7 +135,10 @@ public class LaunchFragment extends Fragment {
 
     }
 
-    private class AddUserWebTask extends AsyncTask<String, Void, String> {
+    /**
+     * AsynchTask used for logging in a user with the custom sign-in web service.
+     */
+    private class LoginUserWebTask extends AsyncTask<String, Void, String> {
 
         @Override
         protected String doInBackground(String... urls) {

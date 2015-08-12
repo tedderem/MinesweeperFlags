@@ -8,7 +8,6 @@ import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
 import android.support.v4.app.ListFragment;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -17,8 +16,8 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
-import android.widget.Toast;
 
+import com.tacoma.uw.erik.minesweeperflags.control.UpdateWebTask;
 import com.tacoma.uw.erik.minesweeperflags.data.GameInfoDB;
 import com.tacoma.uw.erik.minesweeperflags.model.Board;
 import com.tacoma.uw.erik.minesweeperflags.model.GameInfo;
@@ -35,47 +34,59 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
-
 /**
- * A simple {@link Fragment} subclass.
+ * Fragment that is responsible for displaying the game menu to the user. This game menu displays
+ * all the current games associated with this user as well as giving the user the opportunity to
+ * challenge another player to a game.
+ *
+ * @author Erik Tedder
  */
 public class MenuFragment extends ListFragment {
 
-    /** */
+    /** Tag value for debugging purposes. */
     private static final String TAG = "menu";
 
-    /** */
+    /** The url for retrieving all the uses from the system. */
     private static final String GET_USERS_URL = "http://cssgate.insttech.washington.edu/~tedderem/users.php";
 
-    /** */
+    /** The url for creating a new game. */
     private static final String CREATE_GAME_URL = "http://cssgate.insttech.washington.edu/~tedderem/createGame.php";
 
-    /** */
+    /** The url for getting all games associated with a player. */
     private static final String GET_GAMES_URL = "http://cssgate.insttech.washington.edu/~tedderem/getGames.php?player=";
 
-    /** */
+    /**
+     * The time in which the fragment waits in order to pull
+     * new game information from the server.
+     */
     private static final long REFRESH_THRESHOLD = 5 * 60 * 1000;
 
-    /** */
+    /** Listener responsible for notifying the activity a game was selected. */
     private GameSelectedListener myCallback;
 
+    /** The current logged in user. */
     private String myCurrentUser;
 
-    /** */
+    /** The list view used for displaying game information. */
     private ListView myListView;
 
-    /** */
+    /** The list containing all the games associated with a user. */
     private List<GameInfo> myList;
 
-    /** */
+    /** Adapter for facilitating the loading of game information into the ListView. */
     private ArrayAdapter<GameInfo> myArrayAdapter;
 
-    /** */
+    /** The progress dialog view which keeps the user notified on retrieving games. */
     private ProgressDialog myProgressDialog;
 
+    /** Reference to the shared preferences file. */
     private SharedPreferences mySharePrefs;
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     *
+     * Additionally initializes the call back listener to the given activity.
+     */
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
@@ -97,6 +108,7 @@ public class MenuFragment extends ListFragment {
         // Required empty public constructor
     }
 
+    /** {@inheritDoc} */
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -104,6 +116,11 @@ public class MenuFragment extends ListFragment {
         return inflater.inflate(R.layout.fragment_menu, container, false);
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * Initializes the various class fields as well as setting the challenge button listener.
+     */
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
@@ -128,17 +145,25 @@ public class MenuFragment extends ListFragment {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * Additionally ensures that the games are pulled down from the various databases when started.
+     */
     @Override
     public void onStart() {
         super.onStart();
 
+        //ensure the view is not null
         if (getView() != null) {
+            //get the list view and initialize the list to contain game information
             myListView = (ListView) getView().findViewById(android.R.id.list);
             myList = new ArrayList<>();
 
             myArrayAdapter = new ArrayAdapter<>(getActivity(), android.R.layout.simple_list_item_1,
                     android.R.id.text1, myList);
 
+            //check for games but not forced
             checkGames(false);
         }
     }
@@ -155,6 +180,7 @@ public class MenuFragment extends ListFragment {
         long currentTime = System.currentTimeMillis();
 
         //check if the difference between now and the last refresh is past the threshold
+        //or if this is a forced retrieval
         if (forceCheck || currentTime - lastRefresh > REFRESH_THRESHOLD) {
             Log.d(TAG, "Accessing web service");
             //display a progress dialog so the user isn't stuck at an empty screen
@@ -163,6 +189,8 @@ public class MenuFragment extends ListFragment {
             myProgressDialog.setMessage("Please wait while we load your games...");
             myProgressDialog.show();
 
+            //store the current time in the shared preferences to allow for determining later
+            //data retrievals
             SharedPreferences.Editor prefEditor = mySharePrefs.edit();
             prefEditor.putLong(getString(R.string.LASTREFRESH), System.currentTimeMillis());
             prefEditor.apply();
@@ -174,14 +202,21 @@ public class MenuFragment extends ListFragment {
         }
     }
 
+    /**
+     * Private method used to populate the game list on the List View object.
+     */
     private void populateGameList() {
+        //ensure view is not null
         if (getView() != null) {
+            //clear the current items in the list to avoid duplicates
             myList.clear();
 
+            //retrieve all the current games from the SQLite database
             GameInfoDB db = new GameInfoDB(getView().getContext());
             List<GameInfo> games = db.getGames(myCurrentUser);
             db.closeDB();
 
+            //insert each game from the SQLite database into the array list for displaying
             for (GameInfo g : games) {
                 Log.d(TAG, g.toString());
                 myList.add(g);
@@ -191,20 +226,39 @@ public class MenuFragment extends ListFragment {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * Sends a onGameLoaded command to the main activity whenever a game has been selected.
+     */
     @Override
     public void onListItemClick(ListView l, View v, int position, long id) {
         super.onListItemClick(l, v, position, id);
 
+        //Notify the main activity that a game has been selected so it can be displayed
         if (myCallback != null) {
             myCallback.onGameLoaded(myList.get(position).getBoardId());
         }
     }
 
-
+    /**
+     * Standard interface to allow for communicating with the main activity when a game has been
+     * selected by the user.
+     */
     public interface GameSelectedListener {
+        /**
+         * A game has been selected and needs to be loaded into the fragment manager.
+         *
+         * @param board The ID for the board to be loaded.
+         */
         void onGameLoaded(Integer board);
     }
 
+    /**
+     * AsyncTask class to allow for the retrieval of all the registered users from the off-site
+     * database. Class also is responsible for constructing the dialog which lists these users
+     * and allows the currently logged in user to challenge them.
+     */
     private class GetUserWebTask extends AsyncTask<String, Void, String> {
 
         @Override
@@ -305,7 +359,7 @@ public class MenuFragment extends ListFragment {
                                     + users[which] + "&board="
                                     + board.getCompressed().trim();
 
-                            new CreateGameWebTask().execute(s);
+                            new UpdateWebTask().execute(s);
                             checkGames(true);
                         } catch (IOException e) {
                             Log.e(TAG, "Error creating game!");
@@ -321,89 +375,9 @@ public class MenuFragment extends ListFragment {
         }
     }
 
-    private class CreateGameWebTask extends AsyncTask<String, Void, String> {
-
-        @Override
-        protected String doInBackground(String... urls) {
-            try {
-                return downloadUrl(urls[0]);
-            } catch (IOException e) {
-                return "Unable to retrieve web page. URL may be invalid.";
-            }
-        }
-
-        // Given a URL, establishes an HttpUrlConnection and retrieves
-        // the web page content as a InputStream, which it returns as
-        // a string.
-        private String downloadUrl(String myurl) throws IOException {
-            InputStream is = null;
-            // Only display the first 5000 characters of the retrieved
-            // web page content.
-            int len = 10000;
-
-            try {
-                URL url = new URL(myurl);
-                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                conn.setReadTimeout(10000 /* milliseconds */);
-                conn.setConnectTimeout(15000 /* milliseconds */);
-                conn.setRequestMethod("GET");
-                conn.setDoInput(true);
-                // Starts the query
-                conn.connect();
-                int response = conn.getResponseCode();
-                Log.d(TAG, "The response is: " + response);
-                is = conn.getInputStream();
-
-                // Convert the InputStream into a string
-                String contentAsString = readIt(is, len);
-                Log.d(TAG, "The string is: " + contentAsString);
-                return contentAsString;
-
-                // Makes sure that the InputStream is closed after the app is
-                // finished using it.
-            } catch (Exception e) {
-                Log.d(TAG, "Something happened" + e.getMessage());
-            } finally {
-                if (is != null) {
-                    is.close();
-                }
-            }
-            return null;
-
-        }
-
-        // Reads an InputStream and converts it to a String.
-        public String readIt(InputStream stream, int len) throws IOException {
-            Reader reader;
-            reader = new InputStreamReader(stream, "UTF-8");
-            char[] buffer = new char[len];
-            reader.read(buffer);
-            return new String(buffer);
-        }
-
-        @Override
-        protected void onPostExecute(String s) {
-            super.onPostExecute(s);
-
-            // Parse JSON
-            try {
-                JSONObject jsonObject = new JSONObject(s);
-
-                if (jsonObject.getString("result").equals("success")) {
-                    Toast.makeText(getActivity(), "Successfully created game!",
-                            Toast.LENGTH_SHORT).show();
-                } else {
-                    Toast.makeText(getActivity(), jsonObject.getString("error"),
-                            Toast.LENGTH_SHORT).show();
-                }
-            }
-            catch(Exception e) {
-                Log.d(TAG, "Parsing JSON Exception " +
-                        e.getMessage());
-            }
-        }
-    }
-
+    /**
+     * AsyncTask that takes care of getting all the games for the given logged in user.
+     */
     private class GetGamesWebTask extends AsyncTask<String, Void, String> {
 
         @Override

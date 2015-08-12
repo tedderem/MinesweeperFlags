@@ -15,7 +15,8 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ScrollView;
 import android.widget.TextView;
-import android.widget.Toast;
+
+import com.tacoma.uw.erik.minesweeperflags.control.UpdateWebTask;
 
 import org.json.JSONObject;
 
@@ -23,12 +24,10 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.Reader;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
-
 
 /**
  * A fragment which is responsible for handling all chat features within the project.
@@ -156,7 +155,7 @@ public class ChatFragment extends Fragment {
                     try {
                         url = SAVE_CHAT_URL + "?id=" + myBoardId + "&log="
                                 + URLEncoder.encode(myChatLog, "UTF-8");
-                        new SaveChatWebTask().execute(url);
+                        new UpdateWebTask().execute(url);
                     } catch (UnsupportedEncodingException e) {
                         e.printStackTrace();
                     }
@@ -166,90 +165,6 @@ public class ChatFragment extends Fragment {
 
         //ensure that the thread responsible for updating the chat is running
         timerHandler.postDelayed(timerRunnable, 0);
-    }
-
-    /**
-     * Class which is responsible for saving chat logs to the web service. Used by calling the
-     * execute(String) method where the String parameter is the URL to execute.
-     */
-    private class SaveChatWebTask extends AsyncTask<String, Void, String> {
-
-        @Override
-        protected String doInBackground(String... urls) {
-            try {
-                return downloadUrl(urls[0]);
-            } catch (IOException e) {
-                return "Unable to retrieve web page. URL may be invalid.";
-            }
-        }
-
-        // Given a URL, establishes an HttpUrlConnection and retrieves
-        // the web page content as a InputStream, which it returns as
-        // a string.
-        private String downloadUrl(String myurl) throws IOException {
-            InputStream is = null;
-            // Only display the first 5000 characters of the retrieved
-            // web page content.
-            int len = 200;
-
-            try {
-                URL url = new URL(myurl);
-                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                conn.setReadTimeout(10000 /* milliseconds */);
-                conn.setConnectTimeout(15000 /* milliseconds */);
-                conn.setRequestMethod("GET");
-                conn.setDoInput(true);
-                // Starts the query
-                conn.connect();
-                int response = conn.getResponseCode();
-                Log.d(TAG, "The response is: " + response);
-                is = conn.getInputStream();
-
-                // Convert the InputStream into a string
-                String contentAsString = readIt(is, len);
-                Log.d(TAG, "The string is: " + contentAsString);
-                return contentAsString;
-
-                // Makes sure that the InputStream is closed after the app is
-                // finished using it.
-            } catch (Exception e) {
-                Log.d(TAG, "Something happened" + e.getMessage());
-            } finally {
-                if (is != null) {
-                    is.close();
-                }
-            }
-            return null;
-
-        }
-
-        // Reads an InputStream and converts it to a String.
-        public String readIt(InputStream stream, int len) throws IOException {
-            Reader reader;
-            reader = new InputStreamReader(stream, "UTF-8");
-            char[] buffer = new char[len];
-            reader.read(buffer);
-            return new String(buffer);
-        }
-
-        @Override
-        protected void onPostExecute(String s) {
-            super.onPostExecute(s);
-
-            // Parse JSON
-            try {
-                JSONObject jsonObject = new JSONObject(s);
-
-                if (!jsonObject.getString("result").equals("success")) {
-                    Toast.makeText(getActivity(), jsonObject.getString("error"),
-                            Toast.LENGTH_SHORT).show();
-                }
-            }
-            catch(Exception e) {
-                Log.d(TAG, "Parsing JSON Exception " +
-                        e.getMessage());
-            }
-        }
     }
 
     /**
@@ -330,8 +245,6 @@ public class ChatFragment extends Fragment {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-
         }
     }
-
 }

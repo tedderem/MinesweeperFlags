@@ -7,7 +7,6 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
-import com.tacoma.uw.erik.minesweeperflags.model.Board;
 import com.tacoma.uw.erik.minesweeperflags.model.GameInfo;
 
 import java.util.ArrayList;
@@ -15,18 +14,30 @@ import java.util.List;
 
 /**
  * Class for the temporary storage of game information as retrieved from the SQLite database.
+ *
+ * @author Erik Tedder
  */
 public class GameInfoDB {
 
+    /** The version of the database. */
     private static final int DB_VERSION = 1;
+
+    /** The name of the database to be stored. */
     private static final String DB_NAME = "GameInfo.db";
+
+    /** The primary table being used within the database. */
     private static final String GAME_TABLE = "Game";
 
+    /** A reference to the SQLiteDatabase object. */
     private final SQLiteDatabase mySQLiteDatabase;
-    private final GameInfoDBHelper myGameInfoDBHelper;
 
+    /**
+     * Constructor of this database tool based on the given context.
+     *
+     * @param context The context for this database.
+     */
     public GameInfoDB(Context context) {
-        myGameInfoDBHelper = new GameInfoDBHelper(context, DB_NAME, null, DB_VERSION);
+        GameInfoDBHelper myGameInfoDBHelper = new GameInfoDBHelper(context, DB_NAME, null, DB_VERSION);
         mySQLiteDatabase = myGameInfoDBHelper.getWritableDatabase();
     }
 
@@ -56,18 +67,20 @@ public class GameInfoDB {
      * @return Returns a GameInfo object which contains all the information for the various games.
      */
     public List<GameInfo> getGames(final String player) {
-        // Define a projection that specifies which columns from the database
-        // you will actually use after this query.
+        //The values we are wanting from the database
         String[] columns = {
                 "boardID", "playerOne", "playerTwo", "finished"
         };
 
+        //The where clause
         String where = "playerOne=? OR playerTwo=?";
 
+        //the where arguments
         String[] whereArgs = {
             player, player
         };
 
+        //Create and execute the database query
         Cursor c = mySQLiteDatabase.query(
                 GAME_TABLE,  // The table to query
                 columns,                               // The columns to return
@@ -79,11 +92,12 @@ public class GameInfoDB {
         );
         c.moveToFirst();
 
-        //create a list for the different game infos
+        //create a list for the different GameInfos
         List<GameInfo> returnList = new ArrayList<>();
 
         //Iterate through all the returned values
         for (int i=0; i<c.getCount(); i++) {
+            //retrieve the ID, players, and game status
             int id = c.getInt(0);
             String playerOne = c.getString(1);
             String playerTwo = c.getString(2);
@@ -92,6 +106,7 @@ public class GameInfoDB {
 
             Log.d("DATABASE", temp.toString());
 
+            //add to return list and increment to next query result
             returnList.add(temp);
             c.moveToNext();
         }
@@ -99,37 +114,61 @@ public class GameInfoDB {
         return returnList;
     }
 
+    /**
+     * Method for wiping the database to allow for maintaining fresh game information in the system.
+     */
     public void wipeDB() {
         mySQLiteDatabase.execSQL("DELETE FROM Game");
     }
 
+    /**
+     * Method for closing the connection to the database.
+     */
     public void closeDB() {
         mySQLiteDatabase.close();
     }
 
 }
 
+/**
+ * Helper method for the GameInfoDB class. Extends SQLiteOpenHelper and manages the creation and
+ * tear down of the database.
+ *
+ * @author Erik Tedder
+ */
 class GameInfoDBHelper extends SQLiteOpenHelper {
 
-    private static final String CREATE_USER_SQL =
+    /** SQL create method for constructing the necessary database. */
+    private static final String CREATE_GAME_SQL =
             "CREATE TABLE IF NOT EXISTS Game (boardID INTEGER PRIMARY KEY, playerOne TEXT, " +
                     "playerTwo TEXT, finished INTEGER)";
 
-    private static final String DROP_USER_SQL =
+    /** SQL command for dropping the game database table. */
+    private static final String DROP_GAME_SQL =
             "DROP TABLE IF EXISTS Game";
 
+    /**
+     * Constructor of a new helper object.
+     *
+     * @param context The context to be used.
+     * @param name The name of the database.
+     * @param factory The SQLiteDatabase factory type.
+     * @param version The database version being used.
+     */
     public GameInfoDBHelper(Context context, String name, SQLiteDatabase.CursorFactory factory, int version) {
         super(context, name, factory, version);
     }
 
+    /** {@inheritDoc} */
     @Override
     public void onCreate(SQLiteDatabase sqLiteDatabase) {
-        sqLiteDatabase.execSQL(CREATE_USER_SQL);
+        sqLiteDatabase.execSQL(CREATE_GAME_SQL);
     }
 
+    /** {@inheritDoc} */
     @Override
     public void onUpgrade(SQLiteDatabase sqLiteDatabase, int i, int i1) {
-        sqLiteDatabase.execSQL(DROP_USER_SQL);
+        sqLiteDatabase.execSQL(DROP_GAME_SQL);
         onCreate(sqLiteDatabase);
     }
 }

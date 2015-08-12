@@ -20,10 +20,9 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.tacoma.uw.erik.minesweeperflags.control.BoardEvents;
-import com.tacoma.uw.erik.minesweeperflags.data.GameInfoDB;
+import com.tacoma.uw.erik.minesweeperflags.control.UpdateWebTask;
 import com.tacoma.uw.erik.minesweeperflags.model.Board;
 import com.tacoma.uw.erik.minesweeperflags.model.Cell;
-import com.tacoma.uw.erik.minesweeperflags.model.GameInfo;
 
 import org.json.JSONObject;
 
@@ -33,7 +32,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
-import java.io.Reader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Observable;
@@ -55,6 +53,11 @@ public class GameFragment extends Fragment implements Observer {
      * The base URL needed to get a single game.
      */
     private static final String GET_GAME_URL = "http://cssgate.insttech.washington.edu/~tedderem/getGame.php";
+
+    /**
+     * The base URL needed for setting a game to be finished.
+     */
+    private static final String GAME_FINISHED_URL = "http://cssgate.insttech.washington.edu/~tedderem/setFinished.php?id=";
 
     /**
      * The constant tag for this particular fragment to allow for logging information.
@@ -149,6 +152,11 @@ public class GameFragment extends Fragment implements Observer {
     }
 
 
+    /**
+     * {@inheritDoc}
+     *
+     * Also initializes the callback listener based on the passed activity.
+     */
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
@@ -163,10 +171,17 @@ public class GameFragment extends Fragment implements Observer {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * Method also responsible for retrieving the game board information to be able to display the
+     * game to the user.
+     */
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
+        //retrieve board ID and get game values
         myBoardID = getArguments().getInt(getString(R.string.board_bundle));
         getGame();
 
@@ -206,33 +221,6 @@ public class GameFragment extends Fragment implements Observer {
         //stop the refresh thread
         timerHandler.removeCallbacks(timerRunnable);
     }
-
-    /**
-     * Method for saving the current progress of the game.
-     */
-//    private void saveGame() {
-//        //load the database
-//        GameInfoDB db = new GameInfoDB(getView().getContext());
-//
-//        //retrieve the username of the current logged in user
-//        SharedPreferences pref = getActivity().getSharedPreferences(getString(R.string.SHARED_PREFS),
-//                Context.MODE_PRIVATE);
-//        String username = pref.getString(getString(R.string.USERNAME), getString(R.string.player_one_label));
-//
-//        //retrieve the information about the number of mines found by this user
-//        TextView mines = (TextView) getView().findViewById(R.id.player_one_mine_label);
-//
-//        //query the database to see if this user already has a game stored
-//        GameInfo info = new GameInfoDB(getView().getContext()).getGameInfo(username);
-//
-//        //if no game is stored, insert the game into the database. Otherwise update it
-//        if (info == null) {
-//            db.insertGame(username, myBoard, mines.getText().toString());
-//        } else {
-//            db.updateGame(username, myBoard, mines.getText().toString());
-//        }
-//        db.closeDB();
-//    }
 
     /**
      * Constructor of a new GameFragment.
@@ -295,41 +283,6 @@ public class GameFragment extends Fragment implements Observer {
     }
 
     /**
-     * Method for creating a new game. This is called when first creating the game
-     * and anytime the game is restarted.
-     */
-//    private void loadGame() {
-//        //get the name of the current logged in user
-//        //TODO: consolodate this information into a single field or incorporate into the Board
-//        SharedPreferences pref = getActivity().getSharedPreferences(getString(R.string.SHARED_PREFS),
-//                Context.MODE_PRIVATE);
-//        String username = pref.getString(getString(R.string.USERNAME), getString(R.string.player_one_label));
-//
-//        //pull the current information from the database for this user
-//        GameInfo info = new GameInfoDB(getView().getContext()).getGameInfo(username);
-//
-//        TextView mines = (TextView) getView().findViewById(R.id.player_one_mine_label);
-//
-//        //check if user has game already saved. If not create a new game, otherwise load the game
-//        if (info != null) {
-//            myBoard = info.getMyBoard();
-//            //mines.setText(info.getMyMinesFound());
-//        } else {
-//            myBoard = new Board("temp", "temp");
-//            mines.setText("0");
-//        }
-//        //observe the new game board
-//        myBoard.addObserver(this);
-//
-//        //grab the layout the board sits in and remove all the components
-//        LinearLayout outer = (LinearLayout) getView().findViewById(R.id.game_board_layout);
-//        outer.removeAllViews();
-//
-//        constructBoardView();
-//        updateMinesFound();
-//    }
-
-    /**
      * Creates the Cells for the minesweeper flag game. Each Button represents an individual cell
      * which will trigger the correct cell on the board.
      *
@@ -366,7 +319,7 @@ public class GameFragment extends Fragment implements Observer {
                         String s = SAVE_GAME_URL + "?id=" + myBoardID + "&board="
                                 + myBoard.getCompressed().trim();
 
-                        new SaveGameWebTask().execute(s);
+                        new UpdateWebTask().execute(s);
                     } catch (IOException e) {
                         Toast.makeText(getActivity(), "Error saving game!", Toast.LENGTH_SHORT).show();
                     }
@@ -447,6 +400,7 @@ public class GameFragment extends Fragment implements Observer {
             }
             updateMinesFound();
         } else if(data == BoardEvents.GAME_OVER) {
+            new UpdateWebTask().execute(GAME_FINISHED_URL + myBoardID);
             gameOverDisplay();
         }
     }
@@ -478,92 +432,6 @@ public class GameFragment extends Fragment implements Observer {
         //if mines left is less than 5, set color to red
         if (myBoard.getMinesLeft() <= 5) {
             mines.setTextColor(Color.RED);
-        }
-    }
-
-    /**
-     * Method which saves a game to the web service. Usage of this class requires the call of
-     * .execute(String) method which takes a String parameter which is the URL to save the board at.
-     *
-     * TODO: Extract this class to its own independent class since used in other classes.
-     */
-    private class SaveGameWebTask extends AsyncTask<String, Void, String> {
-
-        @Override
-        protected String doInBackground(String... urls) {
-            try {
-                return downloadUrl(urls[0]);
-            } catch (IOException e) {
-                return "Unable to retrieve web page. URL may be invalid.";
-            }
-        }
-
-        // Given a URL, establishes an HttpUrlConnection and retrieves
-        // the web page content as a InputStream, which it returns as
-        // a string.
-        private String downloadUrl(String myurl) throws IOException {
-            InputStream is = null;
-            // Only display the first 200 characters of the retrieved
-            // web page content.
-            int len = 200;
-
-            try {
-                URL url = new URL(myurl);
-                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                conn.setReadTimeout(10000 /* milliseconds */);
-                conn.setConnectTimeout(15000 /* milliseconds */);
-                conn.setRequestMethod("GET");
-                conn.setDoInput(true);
-                // Starts the query
-                conn.connect();
-                int response = conn.getResponseCode();
-                Log.d(TAG, "The response is: " + response);
-                is = conn.getInputStream();
-
-                // Convert the InputStream into a string
-                String contentAsString = readIt(is, len);
-                Log.d(TAG, "The string is: " + contentAsString);
-                return contentAsString;
-
-                // Makes sure that the InputStream is closed after the app is
-                // finished using it.
-            } catch (Exception e) {
-                Log.d(TAG, "Something happened" + e.getMessage());
-            } finally {
-                if (is != null) {
-                    is.close();
-                }
-            }
-            return null;
-
-        }
-
-        // Reads an InputStream and converts it to a String.
-        public String readIt(InputStream stream, int len) throws IOException {
-            Reader reader;
-            reader = new InputStreamReader(stream, "UTF-8");
-            char[] buffer = new char[len];
-            reader.read(buffer);
-            return new String(buffer);
-        }
-
-        @Override
-        protected void onPostExecute(String s) {
-            super.onPostExecute(s);
-
-            // Parse JSON
-            try {
-                JSONObject jsonObject = new JSONObject(s);
-
-                if (!jsonObject.getString("result").equals("success")) {
-                    Toast.makeText(getActivity(), jsonObject.getString("error"),
-                            Toast.LENGTH_SHORT).show();
-                }
-            }
-            catch(Exception e) {
-                Log.d(TAG, "Parsing JSON Exception " +
-                        e.getMessage());
-            }
         }
     }
 

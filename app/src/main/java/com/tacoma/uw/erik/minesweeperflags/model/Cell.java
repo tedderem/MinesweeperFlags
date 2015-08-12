@@ -109,6 +109,7 @@ public class Cell implements Serializable {
         return !myIsMine && myCount == 0;
     }
 
+    /** {@inheritDoc} */
     @Override
     public String toString() {
         String str = " ";

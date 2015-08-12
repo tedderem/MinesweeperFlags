@@ -13,7 +13,7 @@
     <string name="player_one_label">Player One</string>
     <string name="new_game_button">New Game</string>
     <string name="menu_label">Menu</string>
-    <string name="logout_label">logout</string>
+    <string name="logout_label">Logout</string>
     <string name="username_hint">Enter Username</string>
     <string name="password_hint">Enter Password</string>
 
