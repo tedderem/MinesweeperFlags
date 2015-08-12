@@ -210,29 +210,29 @@ public class GameFragment extends Fragment implements Observer {
     /**
      * Method for saving the current progress of the game.
      */
-    private void saveGame() {
-        //load the database
-        GameInfoDB db = new GameInfoDB(getView().getContext());
-
-        //retrieve the username of the current logged in user
-        SharedPreferences pref = getActivity().getSharedPreferences(getString(R.string.SHARED_PREFS),
-                Context.MODE_PRIVATE);
-        String username = pref.getString(getString(R.string.USERNAME), getString(R.string.player_one_label));
-
-        //retrieve the information about the number of mines found by this user
-        TextView mines = (TextView) getView().findViewById(R.id.player_one_mine_label);
-
-        //query the database to see if this user already has a game stored
-        GameInfo info = new GameInfoDB(getView().getContext()).getGameInfo(username);
-
-        //if no game is stored, insert the game into the database. Otherwise update it
-        if (info == null) {
-            db.insertGame(username, myBoard, mines.getText().toString());
-        } else {
-            db.updateGame(username, myBoard, mines.getText().toString());
-        }
-        db.closeDB();
-    }
+//    private void saveGame() {
+//        //load the database
+//        GameInfoDB db = new GameInfoDB(getView().getContext());
+//
+//        //retrieve the username of the current logged in user
+//        SharedPreferences pref = getActivity().getSharedPreferences(getString(R.string.SHARED_PREFS),
+//                Context.MODE_PRIVATE);
+//        String username = pref.getString(getString(R.string.USERNAME), getString(R.string.player_one_label));
+//
+//        //retrieve the information about the number of mines found by this user
+//        TextView mines = (TextView) getView().findViewById(R.id.player_one_mine_label);
+//
+//        //query the database to see if this user already has a game stored
+//        GameInfo info = new GameInfoDB(getView().getContext()).getGameInfo(username);
+//
+//        //if no game is stored, insert the game into the database. Otherwise update it
+//        if (info == null) {
+//            db.insertGame(username, myBoard, mines.getText().toString());
+//        } else {
+//            db.updateGame(username, myBoard, mines.getText().toString());
+//        }
+//        db.closeDB();
+//    }
 
     /**
      * Constructor of a new GameFragment.
@@ -298,36 +298,36 @@ public class GameFragment extends Fragment implements Observer {
      * Method for creating a new game. This is called when first creating the game
      * and anytime the game is restarted.
      */
-    private void loadGame() {
-        //get the name of the current logged in user
-        //TODO: consolodate this information into a single field or incorporate into the Board
-        SharedPreferences pref = getActivity().getSharedPreferences(getString(R.string.SHARED_PREFS),
-                Context.MODE_PRIVATE);
-        String username = pref.getString(getString(R.string.USERNAME), getString(R.string.player_one_label));
-
-        //pull the current information from the database for this user
-        GameInfo info = new GameInfoDB(getView().getContext()).getGameInfo(username);
-
-        TextView mines = (TextView) getView().findViewById(R.id.player_one_mine_label);
-
-        //check if user has game already saved. If not create a new game, otherwise load the game
-        if (info != null) {
-            myBoard = info.getMyBoard();
-            //mines.setText(info.getMyMinesFound());
-        } else {
-            myBoard = new Board("temp", "temp");
-            mines.setText("0");
-        }
-        //observe the new game board
-        myBoard.addObserver(this);
-
-        //grab the layout the board sits in and remove all the components
-        LinearLayout outer = (LinearLayout) getView().findViewById(R.id.game_board_layout);
-        outer.removeAllViews();
-
-        constructBoardView();
-        updateMinesFound();
-    }
+//    private void loadGame() {
+//        //get the name of the current logged in user
+//        //TODO: consolodate this information into a single field or incorporate into the Board
+//        SharedPreferences pref = getActivity().getSharedPreferences(getString(R.string.SHARED_PREFS),
+//                Context.MODE_PRIVATE);
+//        String username = pref.getString(getString(R.string.USERNAME), getString(R.string.player_one_label));
+//
+//        //pull the current information from the database for this user
+//        GameInfo info = new GameInfoDB(getView().getContext()).getGameInfo(username);
+//
+//        TextView mines = (TextView) getView().findViewById(R.id.player_one_mine_label);
+//
+//        //check if user has game already saved. If not create a new game, otherwise load the game
+//        if (info != null) {
+//            myBoard = info.getMyBoard();
+//            //mines.setText(info.getMyMinesFound());
+//        } else {
+//            myBoard = new Board("temp", "temp");
+//            mines.setText("0");
+//        }
+//        //observe the new game board
+//        myBoard.addObserver(this);
+//
+//        //grab the layout the board sits in and remove all the components
+//        LinearLayout outer = (LinearLayout) getView().findViewById(R.id.game_board_layout);
+//        outer.removeAllViews();
+//
+//        constructBoardView();
+//        updateMinesFound();
+//    }
 
     /**
      * Creates the Cells for the minesweeper flag game. Each Button represents an individual cell

@@ -8,31 +8,45 @@ package com.tacoma.uw.erik.minesweeperflags.model;
  */
 public class GameInfo {
 
-    private Board myBoard;
-    //private String myMinesFound;
+    private int myBoardId;
 
-    public GameInfo() {
-        //nada
+    private String myPlayerOne;
+
+    private String myPlayerTwo;
+
+    private int myFinished;
+
+    @Override
+    public String toString() {
+        return "GameInfo{" +
+                "myBoardId=" + myBoardId +
+                ", myPlayerOne='" + myPlayerOne + '\'' +
+                ", myPlayerTwo='" + myPlayerTwo + '\'' +
+                ", myFinished=" + myFinished +
+                '}';
     }
 
-    public GameInfo (Board board) {
-        myBoard = board;
-        //myMinesFound = minesFound;
+    public GameInfo (final int boardId, final String playerOne, final String playerTwo,
+                     final int finished) {
+        myBoardId = boardId;
+        myPlayerOne = playerOne;
+        myPlayerTwo = playerTwo;
+        myFinished = finished;
     }
 
-//    public String getMyMinesFound() {
-//        return myMinesFound;
-//    }
-
-    public Board getMyBoard() {
-        return myBoard;
+    public int getFinished() {
+        return myFinished;
     }
 
-    public void setMyBoard(Board myBoard) {
-        this.myBoard = myBoard;
+    public int getBoardId() {
+        return myBoardId;
     }
 
-//    public void setMyMinesFound(String myMinesFound) {
-//        this.myMinesFound = myMinesFound;
-//    }
+    public String getPlayerOne() {
+        return myPlayerOne;
+    }
+
+    public String getPlayerTwo() {
+        return myPlayerTwo;
+    }
 }

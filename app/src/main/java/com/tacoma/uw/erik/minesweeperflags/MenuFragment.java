@@ -19,7 +19,9 @@ import android.widget.Button;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import com.tacoma.uw.erik.minesweeperflags.data.GameInfoDB;
 import com.tacoma.uw.erik.minesweeperflags.model.Board;
+import com.tacoma.uw.erik.minesweeperflags.model.GameInfo;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -51,21 +53,27 @@ public class MenuFragment extends ListFragment {
     /** */
     private static final String GET_GAMES_URL = "http://cssgate.insttech.washington.edu/~tedderem/getGames.php?player=";
 
+    /** */
+    private static final long REFRESH_THRESHOLD = 5 * 60 * 1000;
 
     /** */
-    private GameSelectedListener mCallback;
+    private GameSelectedListener myCallback;
+
+    private String myCurrentUser;
 
     /** */
-    private ListView mListView;
+    private ListView myListView;
 
     /** */
-    private List<Integer> mList;
+    private List<GameInfo> myList;
 
     /** */
-    private ArrayAdapter<Integer> mArrayAdapter;
+    private ArrayAdapter<GameInfo> myArrayAdapter;
 
     /** */
-    private ProgressDialog mProgressDialog;
+    private ProgressDialog myProgressDialog;
+
+    private SharedPreferences mySharePrefs;
 
     /** {@inheritDoc} */
     @Override
@@ -75,7 +83,7 @@ public class MenuFragment extends ListFragment {
         // This makes sure that the container activity has implemented
         // the callback interface. If not, it throws an exception
         try {
-            mCallback = (GameSelectedListener) activity;
+            myCallback = (GameSelectedListener) activity;
         } catch (ClassCastException e) {
             throw new ClassCastException(activity.toString()
                     + " must implement GameSelectedListener");
@@ -102,6 +110,12 @@ public class MenuFragment extends ListFragment {
 
         View view = getView();
 
+        mySharePrefs = getActivity().getSharedPreferences(getString(R.string.SHARED_PREFS),
+                Context.MODE_PRIVATE);
+        myCurrentUser = mySharePrefs.getString(getString(R.string.USERNAME),
+                getString(R.string.player_one_label));
+
+
         //ensure that the view is not null
         if (view != null) {
             Button gameButton = (Button) view.findViewById(R.id.new_game_button);
@@ -119,34 +133,70 @@ public class MenuFragment extends ListFragment {
         super.onStart();
 
         if (getView() != null) {
-            mListView = (ListView) getView().findViewById(android.R.id.list);
-            mList = new ArrayList<>();
+            myListView = (ListView) getView().findViewById(android.R.id.list);
+            myList = new ArrayList<>();
 
-            mArrayAdapter = new ArrayAdapter<>(getActivity(), android.R.layout.simple_list_item_1,
-                    android.R.id.text1, mList);
+            myArrayAdapter = new ArrayAdapter<>(getActivity(), android.R.layout.simple_list_item_1,
+                    android.R.id.text1, myList);
 
-            checkGames();
+            checkGames(false);
         }
     }
 
-    private void checkGames() {
-        mProgressDialog = new ProgressDialog(getActivity());
-        mProgressDialog.setTitle("Loading");
-        mProgressDialog.setMessage("Please wait while we load your games...");
-        mProgressDialog.show();
+    /**
+     * Method which is responsible for checking for games that correspond to the currently logged
+     * in user.
+     *
+     * @param forceCheck Parameter for forcing the retrieval of the games from the off-site database.
+     */
+    private void checkGames(final boolean forceCheck) {
+        //get the last refresh time
+        long lastRefresh = mySharePrefs.getLong(getString(R.string.LASTREFRESH), 0);
+        long currentTime = System.currentTimeMillis();
 
-        SharedPreferences pref = getActivity().getSharedPreferences(getString(R.string.SHARED_PREFS),
-                Context.MODE_PRIVATE);
-        String currentUser = pref.getString(getString(R.string.USERNAME), getString(R.string.player_one_label));
-        new GetGamesWebTask().execute(GET_GAMES_URL + currentUser);
+        //check if the difference between now and the last refresh is past the threshold
+        if (forceCheck || currentTime - lastRefresh > REFRESH_THRESHOLD) {
+            Log.d(TAG, "Accessing web service");
+            //display a progress dialog so the user isn't stuck at an empty screen
+            myProgressDialog = new ProgressDialog(getActivity());
+            myProgressDialog.setTitle("Loading");
+            myProgressDialog.setMessage("Please wait while we load your games...");
+            myProgressDialog.show();
+
+            SharedPreferences.Editor prefEditor = mySharePrefs.edit();
+            prefEditor.putLong(getString(R.string.LASTREFRESH), System.currentTimeMillis());
+            prefEditor.apply();
+
+            //get the games based on the current user
+            new GetGamesWebTask().execute(GET_GAMES_URL + myCurrentUser);
+        } else {
+            populateGameList();
+        }
+    }
+
+    private void populateGameList() {
+        if (getView() != null) {
+            myList.clear();
+
+            GameInfoDB db = new GameInfoDB(getView().getContext());
+            List<GameInfo> games = db.getGames(myCurrentUser);
+            db.closeDB();
+
+            for (GameInfo g : games) {
+                Log.d(TAG, g.toString());
+                myList.add(g);
+            }
+
+            myListView.setAdapter(myArrayAdapter);
+        }
     }
 
     @Override
     public void onListItemClick(ListView l, View v, int position, long id) {
         super.onListItemClick(l, v, position, id);
 
-        if (mCallback != null) {
-            mCallback.onGameLoaded(mList.get(position));
+        if (myCallback != null) {
+            myCallback.onGameLoaded(myList.get(position).getBoardId());
         }
     }
 
@@ -221,64 +271,48 @@ public class MenuFragment extends ListFragment {
 
             // Parse JSON
             try {
-                //JSONObject jsonObject = new JSONObject(s);
-
+                //get the array of users from the web service
                 JSONArray jsonUsers = new JSONArray(s);
 
+                //create a new array of users that's 1 less than the total users
                 final String[] users = new String[jsonUsers.length() - 1];
 
                 int j = 0;
 
+                //iterate through all the registered users
                 for (int i = 0; i < jsonUsers.length(); i++) {
                     JSONObject o = (JSONObject) jsonUsers.get(i);
-                    SharedPreferences pref = getActivity().getSharedPreferences(getString(R.string.SHARED_PREFS),
-                            Context.MODE_PRIVATE);
-                    String currentUser = pref.getString(getString(R.string.USERNAME), getString(R.string.player_one_label));
 
+                    //check if the user is the current user to avoid users challenging themselves
                     String username = (String) o.get("username");
-
-                    if (!currentUser.equals(username)) {
+                    if (!myCurrentUser.equals(username)) {
                         users[j++] = username;
                     }
                 }
 
+                //construct an alert dialog that will display this altered list of users
                 AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
                 builder.setTitle("Challenge a Player").setItems(users, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        SharedPreferences pref = getActivity().getSharedPreferences(getString(R.string.SHARED_PREFS),
-                                Context.MODE_PRIVATE);
-                        String currentUser = pref.getString(getString(R.string.USERNAME), getString(R.string.player_one_label));
-                        Board board = new Board(currentUser, users[which]);
+                        //construct a new board with the current logged in user and the selected
+                        //user
+                        Board board = new Board(myCurrentUser, users[which]);
 
+                        //attempt to create this game through web services
                         try {
-//                            StringBuilder b = new StringBuilder();
-//                            b.append(CREATE_GAME_URL);
-//                            b.append("?playerone=");
-//                            b.append(currentUser);
-//                            b.append("&playertwo=");
-//                            b.append(users[which]);
-//                            b.append("&board=");
-//                            b.append(new String(Base64.encode(board.getCompressed(), Base64.URL_SAFE)));
-
-//                            String s = CREATE_GAME_URL + "?playerone=" + currentUser + "&playertwo="
-//                                    + users[which] + "&board="
-//                                    + new String(Base64.encode(board.getCompressed(), Base64.NO_WRAP));
-                            String s = CREATE_GAME_URL + "?playerone=" + currentUser + "&playertwo="
+                            String s = CREATE_GAME_URL + "?playerone=" + myCurrentUser + "&playertwo="
                                     + users[which] + "&board="
                                     + board.getCompressed().trim();
 
-                            //Log.d(TAG, s);
                             new CreateGameWebTask().execute(s);
-                            checkGames();
-                            //mCallback.onGameLoaded(board);
+                            checkGames(true);
                         } catch (IOException e) {
                             Log.e(TAG, "Error creating game!");
                         }
                     }
                 });
                 builder.create().show();
-
             }
             catch(Exception e) {
                 Log.d(TAG, "Parsing JSON Exception " +
@@ -437,55 +471,38 @@ public class MenuFragment extends ListFragment {
             if (s != null) {
                 // Parse JSON
                 try {
-                    JSONArray jsonUsers = new JSONArray(s);
-                    mList.clear();
+                    //get the array of game ids
+                    JSONArray jsonGames = new JSONArray(s);
+                    //clear the current list to ensure that the games arent duplicated in view
+                    //myList.clear();
 
-                    for (int i = 0; i < jsonUsers.length(); i++) {
-                        JSONObject o = (JSONObject) jsonUsers.get(i);
-                        int boardID = o.getInt("id");
-                        mList.add(boardID);
+                    if (getView() != null) {
+                        GameInfoDB db = new GameInfoDB(getView().getContext());
 
-//                        String boardBlob = o.getString("board");
-//                        boardBlob = boardBlob.substring(1, boardBlob.length() - 1);
-//                        String[] strArray = boardBlob.split(",");
-//                        byte[] bytes = new byte[strArray.length];
-//
-//                        for (int j = 0; j < strArray.length; j++) {
-//                            bytes[j] = Byte.decode(strArray[j]);
-//                        }
-//
-//                        Log.d(TAG, boardBlob);
-//                        //Log.d(TAG, boardBlob.getBytes(Charset.forName("UTF-8")).toString());
-//                        //byte[] bytes = Base64.decode(boardBlob.getBytes(), Base64.NO_WRAP);
-//
-//                        Board board = null;
-//
-//                        //decompress the Board blob
-//                        try {
-//                            ByteArrayInputStream in = new ByteArrayInputStream(bytes);
-//                            ObjectInputStream objIn = new ObjectInputStream(in);
-//
-//                            //Log.d(TAG, "AFTER INPUT STREAM");
-//                            board = (Board) objIn.readObject();
-//
-//                            //Log.d(TAG, board.toString());
-//                            //Log.d(TAG, "AFTER READ OBJECT");
-//                            //Log.d(TAG, board.getPlayers()[0]);
-//                            //Log.d(TAG, board.getPlayers()[1]);
-//                            //mList.add(new GameInfo(board));
-//                        } catch (IOException | ClassNotFoundException e) {
-//                            e.printStackTrace();
-//                        }
+                        db.wipeDB();
+                        //for each game ID, add this id to the list
+                        for (int i = 0; i < jsonGames.length(); i++) {
+                            JSONObject o = (JSONObject) jsonGames.get(i);
+                            int boardID = o.getInt("id");
+                            String playerOne = o.getString("playerOne");
+                            String playerTwo = o.getString("playerTwo");
+                            int finished = o.getInt("finished");
+
+                            db.insertGame(boardID, playerOne, playerTwo, finished);
+                        }
+                        db.closeDB();
                     }
 
-                    mListView.setAdapter(mArrayAdapter);
-
+                    //set the adapter for the list view.
+                    //myListView.setAdapter(myArrayAdapter);
+                    populateGameList();
                 } catch (Exception e) {
                     Log.d(TAG, "Parsing JSON Exception " +
                             e.getMessage());
                 }
             }
-            mProgressDialog.dismiss();
+            //close out the progress dialog
+            myProgressDialog.dismiss();
         }
     }
 

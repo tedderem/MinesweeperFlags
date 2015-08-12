@@ -10,11 +10,8 @@ import android.util.Log;
 import com.tacoma.uw.erik.minesweeperflags.model.Board;
 import com.tacoma.uw.erik.minesweeperflags.model.GameInfo;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Class for the temporary storage of game information as retrieved from the SQLite database.
@@ -29,8 +26,7 @@ public class GameInfoDB {
     private final GameInfoDBHelper myGameInfoDBHelper;
 
     public GameInfoDB(Context context) {
-        myGameInfoDBHelper = new GameInfoDBHelper(
-                context, DB_NAME, null, DB_VERSION);
+        myGameInfoDBHelper = new GameInfoDBHelper(context, DB_NAME, null, DB_VERSION);
         mySQLiteDatabase = myGameInfoDBHelper.getWritableDatabase();
     }
 
@@ -38,59 +34,38 @@ public class GameInfoDB {
      * Method which inserts a game into the database in the case of a user not currently having
      * a game present in the database.
      *
-     * @param username The user for this game.
-     * @param board The board for this user.
-     * @param minesFound The number of mines found in the board.
      * @return Boolean as far as if this game was successfully inserted.
      */
-    public boolean insertGame(String username, Board board, String minesFound) {
-        byte[] data = compressBoard(board);
-
+    public boolean insertGame(final int boardID, final String playerOne,
+                              final String playerTwo, final int finished) {
         //create values to be placed in database
         ContentValues contentValues = new ContentValues();
-        contentValues.put("username", username);
-        contentValues.put("board", data);
-        contentValues.put("mines_found", minesFound);
+        contentValues.put("boardID", boardID);
+        contentValues.put("playerOne", playerOne);
+        contentValues.put("playerTwo", playerTwo);
+        contentValues.put("finished", finished);
 
         long rowId = mySQLiteDatabase.insert("Game", null, contentValues);
         return rowId != -1;
     }
 
     /**
-     * Method for creating a byte array (blob) of the given Board to allow for adding to database.
-     *
-     * @param board Board object to be compressed into a byte array.
-     * @return The byte array representing this Board.
-     */
-    private byte[] compressBoard(Board board) {
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        try {
-            ObjectOutputStream objOut = new ObjectOutputStream(out);
-            objOut.writeObject(board);
-            objOut.close();
-        } catch (IOException e) {
-            Log.e("serialization", e.getMessage());
-        }
-        return out.toByteArray();
-    }
-
-    /**
      * Method for returning the game information for a specified user.
      *
-     * @param username The user needing game information retrieved.
-     * @return A GameInfo object which contains the board and mines found for this user. Is null
-     * when the user has no saved game in the database.
+     * @param player The player currently logged in needing their games from the sqlite database.
+     * @return Returns a GameInfo object which contains all the information for the various games.
      */
-    public GameInfo getGameInfo(String username) {
+    public List<GameInfo> getGames(final String player) {
         // Define a projection that specifies which columns from the database
         // you will actually use after this query.
         String[] columns = {
-                "board", "mines_found"
+                "boardID", "playerOne", "playerTwo", "finished"
         };
 
-        String where = "username = ?";
+        String where = "playerOne=? OR playerTwo=?";
+
         String[] whereArgs = {
-                username
+            player, player
         };
 
         Cursor c = mySQLiteDatabase.query(
@@ -104,45 +79,28 @@ public class GameInfoDB {
         );
         c.moveToFirst();
 
-        //set GameInfo to null to allow for denoting when a user has no saved game
-        GameInfo gameInfo = null;
+        //create a list for the different game infos
+        List<GameInfo> returnList = new ArrayList<>();
 
-        //ensure the cursor returned values from the query
-        if (c.getCount() > 0) {
-            byte[] boardBlob = c.getBlob(0);
+        //Iterate through all the returned values
+        for (int i=0; i<c.getCount(); i++) {
+            int id = c.getInt(0);
+            String playerOne = c.getString(1);
+            String playerTwo = c.getString(2);
+            int finished = c.getInt(3);
+            GameInfo temp = new GameInfo(id, playerOne, playerTwo, finished);
 
-            Board board = null;
+            Log.d("DATABASE", temp.toString());
 
-            //decompress the Board blob
-            ByteArrayInputStream in = new ByteArrayInputStream(boardBlob);
-            try {
-                ObjectInputStream objIn = new ObjectInputStream(in);
-                board = (Board) objIn.readObject();
-            } catch (IOException | ClassNotFoundException e) {
-                e.printStackTrace();
-            }
-
-            String minesFound = c.getString(1);
-
-            gameInfo = new GameInfo(board);
+            returnList.add(temp);
+            c.moveToNext();
         }
 
-        return gameInfo;
+        return returnList;
     }
 
-    /**
-     * Update a database entry for a given user.
-     *
-     * @param username The user to have their game info updated.
-     * @param board The board to be placed in the entry.
-     * @param minesFound The number of mines found.
-     */
-    public void updateGame(String username, Board board, String minesFound) {
-        ContentValues values = new ContentValues();
-        values.put("board", compressBoard(board));
-        values.put("mines_found", minesFound);
-        mySQLiteDatabase.update("Game", values
-                , "username=?",new String[] {username} );
+    public void wipeDB() {
+        mySQLiteDatabase.execSQL("DELETE FROM Game");
     }
 
     public void closeDB() {
@@ -154,7 +112,8 @@ public class GameInfoDB {
 class GameInfoDBHelper extends SQLiteOpenHelper {
 
     private static final String CREATE_USER_SQL =
-            "CREATE TABLE IF NOT EXISTS Game (username TEXT PRIMARY KEY, board TEXT, mines_found TEXT)";
+            "CREATE TABLE IF NOT EXISTS Game (boardID INTEGER PRIMARY KEY, playerOne TEXT, " +
+                    "playerTwo TEXT, finished INTEGER)";
 
     private static final String DROP_USER_SQL =
             "DROP TABLE IF EXISTS Game";
