@@ -273,6 +273,7 @@ public class GameFragment extends Fragment implements Observer {
                 LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,
                         LinearLayout.LayoutParams.WRAP_CONTENT);
                 p.weight = 1;
+
                 inner.setLayoutParams(p);
                 inner.setWeightSum(myBoard.getWidth());
 
