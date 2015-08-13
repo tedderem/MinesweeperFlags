@@ -31,7 +31,7 @@ public class Board extends Observable implements Serializable {
     private static final int DEFAULT_HEIGHT = 10;
 
     /** Default number of mines on the board. */
-    private static final int DEFAULT_NUMBER_OF_MINES = 30;
+    private static final int DEFAULT_NUMBER_OF_MINES = 20;
 
     /** Two-dimensional array of Cells to represent the game's board. */
     private final Cell[][] myBoard;

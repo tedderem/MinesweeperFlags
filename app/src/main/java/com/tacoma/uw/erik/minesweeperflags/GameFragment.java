@@ -12,6 +12,7 @@ import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -273,7 +274,6 @@ public class GameFragment extends Fragment implements Observer {
                 LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,
                         LinearLayout.LayoutParams.WRAP_CONTENT);
                 p.weight = 1;
-
                 inner.setLayoutParams(p);
                 inner.setWeightSum(myBoard.getWidth());
 
@@ -307,6 +307,9 @@ public class GameFragment extends Fragment implements Observer {
         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT);
         params.weight = 1;
+        b.setGravity(Gravity.CENTER);
+        params.setMargins(-3, -3, -3, -3);
+        b.setText(" ");
         b.setLayoutParams(params);
         b.setMaxWidth(b.getHeight());
 
@@ -374,7 +377,17 @@ public class GameFragment extends Fragment implements Observer {
             if (myBoard.getCell(theRow, theColumn).isMine()) {
                 myCells[theRow][theColumn].setBackgroundResource(R.mipmap.ic_bomb);
             } else {
+                //change the color of the text based on the number of the cell
+                if (myBoard.getCell(theRow, theColumn).getCount() < 3) {
+                    myCells[theRow][theColumn].setTextColor(Color.GREEN);
+                } else if (myBoard.getCell(theRow, theColumn).getCount() < 5) {
+                    myCells[theRow][theColumn].setTextColor(Color.parseColor("#FFA500"));
+                } else {
+                    myCells[theRow][theColumn].setTextColor(Color.RED);
+                }
+
                 myCells[theRow][theColumn].setText(myBoard.getCell(theRow, theColumn).toString());
+
             }
 
             //select and disable the button
@@ -397,15 +410,8 @@ public class GameFragment extends Fragment implements Observer {
             Cell c = (Cell) data;
             int row = c.getLocation()[0];
             int column = c.getLocation()[1];
-            String text = myBoard.getCell(row, column).toString();
-            if (myBoard.getCell(row, column).isMine()) {
-                myCells[row][column].setBackgroundResource(R.mipmap.ic_bomb);
-            } else {
-                myCells[row][column].setText(text);
-            }
-            myCells[row][column].setSelected(true);
 
-            myCells[row][column].setEnabled(false);
+            checkCell(row, column);
         } else if(data == BoardEvents.MINE_FOUND) { //A mine was found, update mines found label
             //update player mines found count
             if (getView() != null) {
