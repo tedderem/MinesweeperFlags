@@ -87,6 +87,7 @@ public class MainActivity extends FragmentActivity
         if (id == R.id.action_goto_menu) {
             if (myPreferences.getBoolean(getString(R.string.LOGGEDIN), false)) {
                 MenuFragment fragment = new MenuFragment();
+                getSupportFragmentManager().popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
                 getSupportFragmentManager().beginTransaction()
                         .replace(R.id.fragment_container, fragment)
                         .commit();
