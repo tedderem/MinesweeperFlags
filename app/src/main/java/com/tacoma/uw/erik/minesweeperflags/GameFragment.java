@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.app.ProgressDialog;
 import android.os.AsyncTask;
 import android.os.Handler;
+import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 
 import android.content.Context;
@@ -130,7 +131,8 @@ public class GameFragment extends Fragment implements Observer {
                     getString(R.string.player_one_label));
 
             //aslong as the current board isn't null and it isn't the logged in user's turn
-            if (myBoard != null && !myBoard.getCurrentPlayer().equals(username)) {
+            if (myBoard != null && !myBoard.getCurrentPlayer().equals(username)
+                    && !myBoard.isGameOver()) {
                 //retrieve the game from the web service
                 getGame();
             }
@@ -149,6 +151,7 @@ public class GameFragment extends Fragment implements Observer {
         String s = GET_GAME_URL + "?id=" + myBoardID;
         //execute a refresh game web task with the constructed url
         new RefreshGameWebTask().execute(s);
+
     }
 
 
@@ -280,6 +283,11 @@ public class GameFragment extends Fragment implements Observer {
                 outer.addView(inner);
             }
         }
+
+        //display if game is over
+        if (myBoard.isGameOver()) {
+            gameOverDisplay();
+        }
     }
 
     /**
@@ -342,8 +350,12 @@ public class GameFragment extends Fragment implements Observer {
      * Method which displays the information when a game has been finished.
      */
     private void gameOverDisplay() {
-        Toast.makeText(getActivity(), "Game Over! " + myBoard.getCurrentPlayer() + " won!",
-                Toast.LENGTH_SHORT).show();
+        //create a bundle and pass necessary game details
+        Bundle b = new Bundle();
+        b.putSerializable(getString(R.string.board), myBoard);
+        DialogFragment gameOverDialog = new FinishedFragment();
+        gameOverDialog.setArguments(b);
+        gameOverDialog.show(getActivity().getSupportFragmentManager(), "Game Over");
     }
 
     /**
@@ -415,10 +427,6 @@ public class GameFragment extends Fragment implements Observer {
 
             playerOneMines.setText(String.valueOf(myBoard.getMinesForPlayer(0)));
             playerTwoMines.setText(String.valueOf(myBoard.getMinesForPlayer(1)));
-
-            if (myBoard.isGameOver()) {
-                gameOverDisplay();
-            }
         }
     }
 
@@ -426,12 +434,14 @@ public class GameFragment extends Fragment implements Observer {
      * Method for updating the mines found label.
      */
     private void updateMinesFound() {
-        //Get the textview for mines left and update its value
-        TextView mines = (TextView) getView().findViewById(R.id.mines_left_label);
-        mines.setText(String.valueOf(myBoard.getMinesLeft()));
-        //if mines left is less than 5, set color to red
-        if (myBoard.getMinesLeft() <= 5) {
-            mines.setTextColor(Color.RED);
+        if (getView() != null) {
+            //Get the textview for mines left and update its value
+            TextView mines = (TextView) getView().findViewById(R.id.mines_left_label);
+            mines.setText(String.valueOf(myBoard.getMinesLeft()));
+            //if mines left is less than 5, set color to red
+            if (myBoard.getMinesLeft() <= 5) {
+                mines.setTextColor(Color.RED);
+            }
         }
     }
 

@@ -9,16 +9,16 @@ package com.tacoma.uw.erik.minesweeperflags.model;
 public class GameInfo {
 
     /** The id for the given board. */
-    private int myBoardId;
+    private final int myBoardId;
 
     /** The name of player one. */
-    private String myPlayerOne;
+    private final String myPlayerOne;
 
     /** The name of player two. */
-    private String myPlayerTwo;
+    private final String myPlayerTwo;
 
     /** Whether or not this game is finished (0 = no, 1 = yes). */
-    private int myFinished;
+    private final int myFinished;
 
     /** {@inheritDoc} */
     @Override

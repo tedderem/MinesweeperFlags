@@ -1,12 +1,10 @@
 <resources>
     <string name="app_name">Minesweeper Flags</string>
     <string name="action_settings">Settings</string>
-
     <string name="login_label">Login</string>
     <string name="register_label">Create a new Account</string>
     <string name="new_game_label">Challenge A Player</string>
     <string name="chat_button_label">Chat</string>
-
     <string name="title_activity_game">Game</string>
     <string name="mines_left_label">Mines Left</string>
     <string name="player_two_label">Payer Two</string>
@@ -16,14 +14,13 @@
     <string name="logout_label">Logout</string>
     <string name="username_hint">Enter Username</string>
     <string name="password_hint">Enter Password</string>
-
     <string name="SHARED_PREFS">com.tacoma.uw.erik.minesweeperflags.PREFS</string>
     <string name="LOGGEDIN">loggedin</string>
     <string name="USERNAME">username</string>
     <string name="LASTREFRESH">lastRefresh</string>
     <string name="board_bundle">board</string>
-
     <string name="chat_edit_text_hint">Enter your message here</string>
     <string name="chat_send_button">SEND</string>
-
+    <string name="game_over">Game Over!</string>
+    <string name="board">board</string>
 </resources>

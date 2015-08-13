@@ -46,9 +46,6 @@ public class UpdateWebTask extends AsyncTask<String, Void, String> {
      */
     private String downloadUrl(String myurl) throws IOException {
         InputStream is = null;
-        // Only display the first 200 characters of the retrieved
-        // web page content.
-        int len = 200;
 
         try {
             URL url = new URL(myurl);
