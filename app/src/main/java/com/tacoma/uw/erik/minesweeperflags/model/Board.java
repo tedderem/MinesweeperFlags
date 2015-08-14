@@ -237,8 +237,8 @@ public class Board extends Observable implements Serializable {
                 setChanged();
                 notifyObservers(BoardEvents.MINE_FOUND);
 
-                //current player has found the majority of mines
-                if (myPlayersMinesFound[myCurrentPlayer] > myMineTotal/2) {
+                //current player has found the majority of mines or all mines found
+                if (myPlayersMinesFound[myCurrentPlayer] > myMineTotal/2 || getMinesLeft() == 0) {
                     myGameOver = true;
                     setChanged();
                     notifyObservers(BoardEvents.GAME_OVER);

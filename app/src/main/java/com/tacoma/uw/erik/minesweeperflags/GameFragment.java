@@ -258,13 +258,6 @@ public class GameFragment extends Fragment implements Observer {
             //set the weight to allow for the buttons to show correctly on any display size
             outer.setWeightSum(myBoard.getHeight());
 
-            //Set the player labels
-            TextView playerOne = (TextView) getView().findViewById(R.id.player_one_label);
-            TextView playerTwo = (TextView) getView().findViewById(R.id.player_two_label);
-
-            playerOne.setText(myBoard.getPlayers()[0]);
-            playerTwo.setText(myBoard.getPlayers()[1]);
-
             //ensure the player scores are correct
             updatePlayerScore();
 
@@ -282,6 +275,15 @@ public class GameFragment extends Fragment implements Observer {
                     inner.addView(createCell(i, j));
                 }
                 outer.addView(inner);
+            }
+
+            //display the toast message that its the current player's turn
+            SharedPreferences pref = getActivity().getSharedPreferences(getString(R.string.SHARED_PREFS),
+                    Context.MODE_PRIVATE);
+            String username = pref.getString(getString(R.string.USERNAME),
+                    getString(R.string.player_one_label));
+            if (myBoard.getCurrentPlayer().equals(username)) {
+                Toast.makeText(getActivity(), "It is your turn", Toast.LENGTH_SHORT).show();
             }
         }
 
@@ -431,6 +433,20 @@ public class GameFragment extends Fragment implements Observer {
         if (getView() != null) {
             TextView playerOneMines = (TextView) getView().findViewById(R.id.player_one_mine_label);
             TextView playerTwoMines = (TextView) getView().findViewById(R.id.player_two_mine_label);
+
+            //Set the player labels
+            TextView playerOne = (TextView) getView().findViewById(R.id.player_one_label);
+            TextView playerTwo = (TextView) getView().findViewById(R.id.player_two_label);
+
+            playerOne.setText(myBoard.getPlayers()[0]);
+            playerTwo.setText(myBoard.getPlayers()[1]);
+
+            //highlight the current player's name
+            if (myBoard.getCurrentPlayer().equals(myBoard.getPlayers()[0])) {
+                playerOne.setTextColor(Color.GREEN);
+            } else {
+                playerTwo.setTextColor(Color.GREEN);
+            }
 
             playerOneMines.setText(String.valueOf(myBoard.getMinesForPlayer(0)));
             playerTwoMines.setText(String.valueOf(myBoard.getMinesForPlayer(1)));
