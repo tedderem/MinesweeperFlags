@@ -15,6 +15,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.ListView;
 
 import com.tacoma.uw.erik.minesweeperflags.control.UpdateWebTask;
@@ -140,6 +141,15 @@ public class MenuFragment extends ListFragment {
                 @Override
                 public void onClick(View v) {
                     new GetUserWebTask().execute(GET_USERS_URL);
+                }
+            });
+
+            //set sync action
+            ImageView sync = (ImageView) view.findViewById(R.id.sync);
+            sync.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    checkGames(true);
                 }
             });
         }

@@ -69,7 +69,7 @@ public class GameFragment extends Fragment implements Observer {
     /**
      * The intended delay between retrieving new board updates in milliseconds.
      */
-    private static final int REFRESH_TIME = 5000;
+    private static final int REFRESH_TIME = 2000;
 
     /**
      * The ID of the board, used for retrieving the correct board from the web service.
@@ -85,6 +85,11 @@ public class GameFragment extends Fragment implements Observer {
      * The array of Buttons that will represent the Cell array from myBoard.
      */
     private Button[][] myCells;
+
+    /**
+     * The default text color for labels.
+     */
+    private int myDefaultColor;
 
     /**
      * Custom listener that will be used to notify the main activity when a chat window has been
@@ -192,6 +197,7 @@ public class GameFragment extends Fragment implements Observer {
         View view = getView();
 
         if (view != null) {
+            myDefaultColor = ((TextView) getView().findViewById(R.id.player_one_label)).getTextColors().getDefaultColor();
             //get the chat button from the view and set its appropriate listener
             Button chatButton = (Button) view.findViewById(R.id.chat_button);
             chatButton.setOnClickListener(new View.OnClickListener() {
@@ -444,8 +450,10 @@ public class GameFragment extends Fragment implements Observer {
             //highlight the current player's name
             if (myBoard.getCurrentPlayer().equals(myBoard.getPlayers()[0])) {
                 playerOne.setTextColor(Color.GREEN);
+                playerTwo.setTextColor(myDefaultColor);
             } else {
                 playerTwo.setTextColor(Color.GREEN);
+                playerOne.setTextColor(myDefaultColor);
             }
 
             playerOneMines.setText(String.valueOf(myBoard.getMinesForPlayer(0)));
